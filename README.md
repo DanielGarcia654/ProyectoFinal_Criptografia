@@ -3,10 +3,11 @@
 # 🪙 Proyecto Final de Criptografía 
 
 ### Facultad de Ingeniería UNAM | Semestre 2026-1
-
+<!-- 
 ![Criptografía](https://img.shields.io/badge/Materia-Criptograf%C3%ADa-blue?style=for-the-badge)
 ![Semestre](https://img.shields.io/badge/Semestre-2026--1-green?style=for-the-badge)
-![UNAM](https://img.shields.io/badge/UNAM-Facultad%20de%20Ingenier%C3%ADa-gold?style=for-the-badge)
+![UNAM](https://img.shields.io/badge/UNAM-Facultad%20de%20Ingenier%C3%ADa-gold?style=for-the-badge) 
+-->
 
 </div>
 
