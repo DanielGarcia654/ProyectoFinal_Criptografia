@@ -3,10 +3,7 @@ import os
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog  
 
-import billetera
-import transaccion
-import verificador
-
+import billetera, transaccion, verificador
 
 ctk.set_appearance_mode("dark") 
 ctk.set_default_color_theme("blue")  
@@ -15,20 +12,20 @@ class AppCryptoWallet:
     def __init__(self):
         self.app = ctk.CTk()
         self.app.title("Proyecto Cripto-Wallet")
-        self.app.geometry("450x500")
+        self.app.geometry("950x720")
         self.app.resizable(False, False)
         
         self.title_label = ctk.CTkLabel(
             self.app, 
             text="¡Bienvenido a Crypto-Wallet!", 
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=25, weight="bold")
         )
-        self.title_label.pack(pady=20)
+        self.title_label.pack(pady=30)
         
         self.instr_label = ctk.CTkLabel(
             self.app,
             text="Selecciona una opción:",
-            font=ctk.CTkFont(size=14)
+            font=ctk.CTkFont(size=16)
         )
         self.instr_label.pack(pady=10)
         
@@ -41,7 +38,7 @@ class AppCryptoWallet:
             height=40,
             corner_radius=10
         )
-        self.btn1.pack(pady=10)
+        self.btn1.pack(pady=15)
         
         # Botón 2: Ver dirección y llaves
         self.btn2 = ctk.CTkButton(
@@ -52,7 +49,7 @@ class AppCryptoWallet:
             height=40,
             corner_radius=10
         )
-        self.btn2.pack(pady=10)
+        self.btn2.pack(pady=15)
         
         # Botón 3: Crear y firmar transacción
         self.btn3 = ctk.CTkButton(
@@ -63,7 +60,7 @@ class AppCryptoWallet:
             height=40,
             corner_radius=10
         )
-        self.btn3.pack(pady=10)
+        self.btn3.pack(pady=15)
         
         # Botón 4: Procesar inbox
         self.btn4 = ctk.CTkButton(
@@ -74,7 +71,7 @@ class AppCryptoWallet:
             height=40,
             corner_radius=10
         )
-        self.btn4.pack(pady=10)
+        self.btn4.pack(pady=15)
         
         # Botón 5: Salir
         self.btn5 = ctk.CTkButton(
@@ -87,10 +84,11 @@ class AppCryptoWallet:
             hover_color="darkred",
             corner_radius=10
         )
-        self.btn5.pack(pady=20)
+        self.btn5.pack(pady=30)
     
     def opcion1(self):
-        contraseña = simpledialog.askstring("Contraseña", "Define una contraseña segura para tu billetera:", show='*')
+        dialogo = ctk.CTkInputDialog(text="Define una contraseña segura:", title="Crear Billetera")
+        contraseña = dialogo.get_input()
         if not contraseña:
             messagebox.showwarning("Advertencia", "Se debe generar una contraseña obligatoriamente.")
             return
@@ -106,7 +104,7 @@ class AppCryptoWallet:
     def opcion2(self):
         contraseña = simpledialog.askstring("Contraseña", "Ingresa tu contraseña para desbloquear:", show='*')
         if not contraseña:
-            return  # O avisa si quieres
+            return  
         try:
             llave, resultado = billetera.cargar_billetera(contraseña=contraseña)
             if resultado["exito"]:

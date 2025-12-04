@@ -15,80 +15,79 @@ def generar_direccion(bytes_publicos):
     direccion_bytes=digest[:20]
     return "0x"+direccion_bytes.hex()
 
-def crear_billetera():
-    print("*Configuración inicial de sistema de billetera fría")
-    contraseña=input("Define una contraseña segura para tu billetera: ")
+def crear_billetera(contraseña,request=None):
     if not contraseña:
-        print("Se debe generar una contraseña obligatoriamente")
-        return
-
-    print("*Generando par de llaves criptográficas (Ed25519)...")
-
-    llave_privada=ed25519.Ed25519PrivateKey.generate()
-    llave_publica=llave_privada.public_key()
-
-    bytes_privados=llave_privada.private_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PrivateFormat.Raw,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-    bytes_publicos=llave_publica.public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw
-    )
-    direccion=generar_direccion(bytes_publicos)
-
-    print("Derivando clave de encriptación segura...")
-    sal=os.urandom(16) 
-    
-    kdf = Argon2id(
-        salt=sal,
-        length=32,            
-        iterations=2,         
-        memory_cost=64 * 1024,
-        lanes=1
-    )
-    llave_maestra_encriptacion=kdf.derive(contraseña.encode('utf-8'))
-
-    print("Encriptando llave privada...")
-    aesgcm=AESGCM(llave_maestra_encriptacion)
-    nonce=os.urandom(12) 
-
-    datos_cifrados=aesgcm.encrypt(nonce, bytes_privados, None)
-    texto_cifrado=datos_cifrados[:-16]
-    etiqueta_auth=datos_cifrados[-16:]
-
-    datos_billetera={
-        "kdf":"Argon2id",
-        "kdf_params":{
-            "salt_b64":base64.b64encode(sal).decode('utf-8'),
-            "t_cost":2,
-            "m_cost":64 * 1024,
-            "p":1
-        },
-        "cipher":"AES-256-GCM",
-        "cipher_params":{
-            "nonce_b64":base64.b64encode(nonce).decode('utf-8')
-        },
-        "ciphertext_b64":base64.b64encode(texto_cifrado).decode('utf-8'),
-        "tag_b64":base64.b64encode(etiqueta_auth).decode('utf-8'),
-        "pubkey_b64":base64.b64encode(bytes_publicos).decode('utf-8'),
-        "address":direccion,
-        "scheme":"Ed25519",
-        "created":datetime.datetime.now(datetime.timezone.utc).isoformat()
-    }
+        return {"exito": False, "error": "Se debe generar una contraseña obligatoriamente"}
+    resultado = {"exito": False, "mensaje": "", "direccion": "", "pubkey_b64": "", "error": ""}
 
     try:
-        with open(NOMBRE_ARCHIVO_CLAVES,"w") as archivo:
-            json.dump(datos_billetera, archivo, indent=4)
-        
-        print(f"\nEXITO, billetera creada y guardada en '{NOMBRE_ARCHIVO_CLAVES}'")
-        print(f"Dirección: {direccion}")
-        print(f"Llave Pública (Base64): {datos_billetera['pubkey_b64']}")
-        print("NO PIERDAS TU CONTRASEÑA O PERDERAS ACCESO A TUS FONDOS.")
-        
-    except IOError as e:
-        print(f"Error al guardar el archivo: {e}")
+        llave_privada=ed25519.Ed25519PrivateKey.generate()
+        llave_publica=llave_privada.public_key()
+
+        bytes_privados=llave_privada.private_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PrivateFormat.Raw,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        bytes_publicos=llave_publica.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw
+        )
+        direccion=generar_direccion(bytes_publicos)
+
+        sal=os.urandom(16)
+        kdf=Argon2id(salt=sal,length=32,iterations=2,memory_cost=64*1024,lanes=1)
+        llave_maestra =kdf.derive(contraseña.encode('utf-8'))
+        aesgcm=AESGCM(llave_maestra)
+        nonce=os.urandom(12)
+        datos_cifrados= aesgcm.encrypt(nonce, bytes_privados, None)
+        texto_cifrado =datos_cifrados[:-16]
+        etiqueta_auth= datos_cifrados[-16:]
+
+        datos_billetera = {
+            "kdf": "Argon2id",
+            "kdf_params": {
+                "salt_b64":base64.b64encode(sal).decode('utf-8'),
+                "t_cost":2,
+                "m_cost":64*1024,
+                "p": 1
+            },
+            "cipher": "AES-256-GCM",
+            "cipher_params": {"nonce_b64": base64.b64encode(nonce).decode('utf-8')},
+            "ciphertext_b64": base64.b64encode(texto_cifrado).decode('utf-8'),
+            "tag_b64": base64.b64encode(etiqueta_auth).decode('utf-8'),
+            "pubkey_b64": base64.b64encode(bytes_publicos).decode('utf-8'),
+            "address": direccion,
+            "scheme": "Ed25519",
+            "created": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+
+        # Guardar sin checksum primero
+        with open(NOMBRE_ARCHIVO_CLAVES,"w",encoding="utf-8") as f:
+            json.dump(datos_billetera, f,indent=4)
+
+        # Calcular checksum del json sin el campo checksum
+        checksum=hashlib.sha256(json.dumps(datos_billetera, indent=4).encode('utf-8')).hexdigest()
+        datos_billetera["checksum"]=checksum
+
+        # Reescribir con checksum
+        with open(NOMBRE_ARCHIVO_CLAVES,"w",encoding="utf-8") as f:
+            json.dump(datos_billetera, f, indent=4)
+        resultado["exito"]=True
+        resultado["direccion"]=direccion
+        resultado["pubkey_b64"]=datos_billetera["pubkey_b64"]
+        resultado["mensaje"] = f"Exito: billetera creada → {NOMBRE_ARCHIVO_CLAVES}\nDirección: {direccion}"
+        if request:
+            request.session['billetera_info'] = {'direccion': direccion}
+
+        # Zeroize
+        for i in range(len(bytes_privados)):
+            bytes_privados = bytes_privados[:i]+ secrets.token_bytes(1) + bytes_privados[i+1:]
+        del bytes_privados, llave_maestra, datos_cifrados
+
+    except Exception as e:
+        resultado["error"]= f"Error: {str(e)}"
+    return resultado
 
 def cargar_billetera():
     print(f"\nCargar billetera ({NOMBRE_ARCHIVO_CLAVES})")
