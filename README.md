@@ -116,6 +116,7 @@ cd ProyectoFinal
 
 # Instala las dependencias
 pip install cryptography customtkinter
+py -m pip install customtkinter packaging
 ```
 
 
@@ -123,40 +124,33 @@ pip install cryptography customtkinter
 
 ## 💡 Uso
 
-### Crear una nueva billetera
-```bash
-python app/billetera.py
-# Opción 1: Crear nueva billetera
-```
+Para instrucciones detalladas de uso, instalación y ejemplos prácticos, consulta la **[Guía de Uso Completa](GUIA_USO.md)**.
 
-### Firmar una transacción
-```bash
-python app/transaccion.py
-# Ingresa los datos de la transacción
-```
+### Inicio Rápido
 
-### Verificar transacciones
 ```bash
-python app/verificador.py
-# Procesa el inbox con transacciones recibidas
-```
-
-### Ejecutar con GUI
-```bash
+# Ejecutar con interfaz gráfica
 python app/main.py
 ```
+
+La guía incluye:
+- 📘 Configuración paso a paso
+- 💼 Ejemplos prácticos completos
+- 🔧 Solución de problemas
+- ❓ Preguntas frecuentes
+- 🎯 Mejores prácticas de seguridad
 
 ---
 
 ## 📚 Tecnologías y Herramientas
 
-- � **Python 3.x** - Lenguaje de programación principal
-- 🔐 **cryptography** - Librería de primitivas criptográficas
+- **Python 3.x** - Lenguaje de programación principal
+- **cryptography** - Librería de primitivas criptográficas
   - Ed25519 para firma digital
   - AES-256-GCM para cifrado autenticado
   - Argon2id para derivación de claves
-- �️ **CustomTkinter** - Interfaz gráfica moderna
-- 🧪 **unittest** - Framework de pruebas
+- **CustomTkinter** - Interfaz gráfica moderna
+- **unittest** - Framework de pruebas
 
 ---
 
@@ -177,7 +171,7 @@ Este proyecto es desarrollado con fines académicos para la **Facultad de Ingeni
 --->
 <div align="center">
 
-**🏛️ Universidad Nacional Autónoma de México**  
+**Universidad Nacional Autónoma de México**  
 **Facultad de Ingeniería**  
 **Criptografía | 2026-1**
 
