@@ -84,7 +84,6 @@ graph LR
 
 3. Ingresa una **contraseña segura** cuando se te solicite
    
-   > [!IMPORTANT]
    > **¡NUNCA PIERDAS TU CONTRASEÑA!**  
    > No hay forma de recuperarla. Si la pierdes, perderás acceso a tus fondos.
 
@@ -119,10 +118,10 @@ llave_encriptada = aesgcm.encrypt(nonce, llave_privada, None)
 #### Resultado Esperado
 
 ```
-✅ EXITO, billetera creada y guardada en 'keystore.json'
+✅ Éxito. Billetera creada y guardada en 'keystore.json'
 📍 Dirección: 0xcde2e3aed05e0e78cf8b22ce20afdcd412e64289
 🔑 Llave Pública (Base64): Xy+bufSvVZutFTe1CdgxLi+kx3/U/cr1HHSVMh/qNKw=
-⚠️  NO PIERDAS TU CONTRASEÑA O PERDERAS ACCESO A TUS FONDOS.
+⚠️ NO PIERDAS TU CONTRASEÑA O PERDERAS ACCESO A TUS FONDOS.
 ```
 
 ---
@@ -260,12 +259,12 @@ python verificador.py
 ```mermaid
 graph TD
     A[Cargar Transacción] --> B{Nonce Válido?}
-    B -->|No| C[❌ Rechazar - Replay Attack]
+    B -->|No| C[ Rechazar - Replay Attack]
     B -->|Sí| D{Firma Válida?}
-    D -->|No| E[❌ Rechazar - Firma Inválida]
+    D -->|No| E[ Rechazar - Firma Inválida]
     D -->|Sí| F{Dirección Coincide?}
-    F -->|No| G[❌ Rechazar - Dirección Falsa]
-    F -->|Sí| H[✅ Aceptar - Mover a verified/]
+    F -->|No| G[ Rechazar - Dirección Falsa]
+    F -->|Sí| H[ Aceptar - Mover a verified/]
 ```
 
 **Verificaciones Realizadas:**
@@ -336,9 +335,9 @@ Copy-Item "outbox\tx_0xcde2_1.json" -Destination "inbox\"
 python app/main.py
 # Clic en "Procesar inbox"
 
-# ✅ Archivos procesados: 1
-# ✅ Válidos: 1
-# ✅ Movidos a verified/
+#  Archivos procesados: 1
+#  Válidos: 1
+#  Movidos a verified/
 ```
 
 ### Ejemplo 4: Detectar Ataque de Replay
@@ -346,8 +345,8 @@ python app/main.py
 ```bash
 # Intenta enviar el mismo nonce dos veces:
 
-# Primera transacción (nonce=1) ✅ Éxito
-# Segunda transacción (nonce=1) ❌ Rechazada
+# Primera transacción (nonce=1)
+# Segunda transacción (nonce=1) //Rechazo
 
 # Mensaje:
 # ALERTA. Replay Attack detectado.
@@ -382,7 +381,7 @@ pip install cryptography customtkinter
 
 **Solución:**
 - Asegúrate de ingresar la contraseña exacta (mayúsculas/minúsculas)
-- Si la olvidaste, **no hay recuperación posible** 😢
+- Si la olvidaste, **no hay recuperación posible** 
 
 ### Problema 4: "Replay Attack detectado"
 
@@ -452,44 +451,10 @@ El objetivo es aprender criptografía, no protocolos de red.
 
 ---
 
-## 🎯 Mejores Prácticas
-
-### Seguridad
-
-- ✅ Usa contraseñas de **al menos 12 caracteres**
-- ✅ Incluye mayúsculas, minúsculas, números y símbolos
-- ✅ Guarda backups de `keystore.json` en medios seguros
-- ✅ Nunca compartas tu contraseña
-- ❌ No uses contraseñas obvias como "password123"
-
 ### Organización
 
 - 📁 Mantén `inbox/` limpio después de verificar
 - 📁 Archiva transacciones importantes de `verified/`
 - 📁 Haz backup regular de `base_datos_nonces.json`
 
-### Testing
 
-- 🧪 Prueba con transacciones pequeñas primero
-- 🧪 Verifica que el nonce esté correcto antes de firmar
-- 🧪 Ejecuta `python app/pruebas.py` para tests automatizados
-
----
-
-## 📞 Soporte
-
-Si tienes problemas:
-
-1. Revisa esta guía
-2. Consulta el [README.md](README.md)
-3. Contacta al equipo de desarrollo
-
----
-
-## 📜 Licencia
-
-Este proyecto es desarrollado con fines académicos para la **Facultad de Ingeniería de la UNAM**.
-
----
-
-**¡Disfruta explorando el mundo de la criptografía! 🔐🚀**
