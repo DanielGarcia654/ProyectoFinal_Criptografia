@@ -451,44 +451,10 @@ El objetivo es aprender criptografía, no protocolos de red.
 
 ---
 
-## 🎯 Mejores Prácticas
-
-### Seguridad
-
-- ✅ Usa contraseñas de **al menos 12 caracteres**
-- ✅ Incluye mayúsculas, minúsculas, números y símbolos
-- ✅ Guarda backups de `keystore.json` en medios seguros
-- ✅ Nunca compartas tu contraseña
-- ❌ No uses contraseñas obvias como "password123"
-
 ### Organización
 
 - 📁 Mantén `inbox/` limpio después de verificar
 - 📁 Archiva transacciones importantes de `verified/`
 - 📁 Haz backup regular de `base_datos_nonces.json`
 
-### Testing
 
-- 🧪 Prueba con transacciones pequeñas primero
-- 🧪 Verifica que el nonce esté correcto antes de firmar
-- 🧪 Ejecuta `python app/pruebas.py` para tests automatizados
-
----
-
-## 📞 Soporte
-
-Si tienes problemas:
-
-1. Revisa esta guía
-2. Consulta el [README.md](README.md)
-3. Contacta al equipo de desarrollo
-
----
-
-## 📜 Licencia
-
-Este proyecto es desarrollado con fines académicos para la **Facultad de Ingeniería de la UNAM**.
-
----
-
-**¡Disfruta explorando el mundo de la criptografía! 🔐🚀**
