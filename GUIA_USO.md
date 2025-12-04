@@ -259,12 +259,12 @@ python verificador.py
 ```mermaid
 graph TD
     A[Cargar Transacción] --> B{Nonce Válido?}
-    B -->|No| C[❌ Rechazar - Replay Attack]
+    B -->|No| C[ Rechazar - Replay Attack]
     B -->|Sí| D{Firma Válida?}
-    D -->|No| E[❌ Rechazar - Firma Inválida]
+    D -->|No| E[ Rechazar - Firma Inválida]
     D -->|Sí| F{Dirección Coincide?}
-    F -->|No| G[❌ Rechazar - Dirección Falsa]
-    F -->|Sí| H[✅ Aceptar - Mover a verified/]
+    F -->|No| G[ Rechazar - Dirección Falsa]
+    F -->|Sí| H[ Aceptar - Mover a verified/]
 ```
 
 **Verificaciones Realizadas:**
@@ -335,9 +335,9 @@ Copy-Item "outbox\tx_0xcde2_1.json" -Destination "inbox\"
 python app/main.py
 # Clic en "Procesar inbox"
 
-# ✅ Archivos procesados: 1
-# ✅ Válidos: 1
-# ✅ Movidos a verified/
+#  Archivos procesados: 1
+#  Válidos: 1
+#  Movidos a verified/
 ```
 
 ### Ejemplo 4: Detectar Ataque de Replay
@@ -345,8 +345,8 @@ python app/main.py
 ```bash
 # Intenta enviar el mismo nonce dos veces:
 
-# Primera transacción (nonce=1) ✅ Éxito
-# Segunda transacción (nonce=1) ❌ Rechazada
+# Primera transacción (nonce=1)
+# Segunda transacción (nonce=1) //Rechazo
 
 # Mensaje:
 # ALERTA. Replay Attack detectado.
@@ -381,7 +381,7 @@ pip install cryptography customtkinter
 
 **Solución:**
 - Asegúrate de ingresar la contraseña exacta (mayúsculas/minúsculas)
-- Si la olvidaste, **no hay recuperación posible** 😢
+- Si la olvidaste, **no hay recuperación posible** 
 
 ### Problema 4: "Replay Attack detectado"
 
