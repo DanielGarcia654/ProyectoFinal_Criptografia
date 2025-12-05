@@ -97,17 +97,26 @@ def cargar_billetera(contraseña,request=None):
         return None, resultado
 
     try:
-        with open(NOMBRE_ARCHIVO_CLAVES,"r") as f:
+        with open(NOMBRE_ARCHIVO_CLAVES, "r", encoding="utf-8") as f:
             datos=json.load(f)
 
-        contraseña=input("Ingresa tu contraseña para desbloquear: ")
-        
-        sal=base64.b64decode(datos["kdf_params"]["salt_b64"])
-        nonce=base64.b64decode(datos["cipher_params"]["nonce_b64"])
-        texto_cifrado=base64.b64decode(datos["ciphertext_b64"])
-        tag=base64.b64decode(datos["tag_b64"])
-        
-        kdf=Argon2id(
+        # Extraer y verificar checksum
+        stored_checksum=datos.pop("checksum", None)
+        if stored_checksum:
+            # Calcular checksum del JSON sin el campo checksum
+            current_json = json.dumps(datos, indent=4).encode('utf-8')
+            calculated_checksum=hashlib.sha256(current_json).hexdigest()
+            if stored_checksum != calculated_checksum:
+                resultado["error"]="Checksum falló → archivo corrupto o modificado"
+                return None, resultado
+
+        # Decrypt.
+        sal = base64.b64decode(datos["kdf_params"]["salt_b64"])
+        nonce = base64.b64decode(datos["cipher_params"]["nonce_b64"])
+        texto_cifrado = base64.b64decode(datos["ciphertext_b64"])
+        tag = base64.b64decode(datos["tag_b64"])
+
+        kdf = Argon2id(
             salt=sal,
             length=32,
             iterations=datos["kdf_params"]["t_cost"],
