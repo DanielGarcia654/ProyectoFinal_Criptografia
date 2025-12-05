@@ -3,6 +3,7 @@ import json
 import base64
 import datetime
 import hashlib
+import secrets
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
@@ -138,18 +139,16 @@ def cargar_billetera(contraseña,request=None):
         resultado["direccion"]=direccion
         resultado["mensaje"]=f"Billetera desbloqueada → {direccion}"
 
-    except Exception:
-        print("\nFALLO. No se pudo desbloquear la billetera (Contraseña incorrecta).")
-        return None
+        if request:
+            request.session['billetera_info']={'direccion': direccion}
 
-if __name__=="__main__":
-    print("1. Crear nueva billetera")
-    print("2. Cargar billetera existente")
-    opcion=input("Selecciona una opción (1/2): ")
-    
-    if opcion=="1":
-        crear_billetera()
-    elif opcion=="2":
-        cargar_billetera()
-    else:
-        print("Opción no válida")
+        # Zeroize
+        for i in range(len(bytes_privados)):
+            bytes_privados = bytes_privados[:i]+secrets.token_bytes(1) + bytes_privados[i+1:]
+        del bytes_privados,llave_maestra
+
+        return llave_privada,resultado
+
+    except Exception as e:
+        resultado["error"]="Contraseña incorrecta o archivo dañado"
+        return None, resultado
