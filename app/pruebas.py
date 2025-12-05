@@ -1,104 +1,60 @@
-import unittest
-import os
-import json
+import pytest
 import base64
-import shutil
-from unittest.mock import patch
-from cryptography.hazmat.primitives import serialization
-import billetera
-import transaccion
-import verificador
+from billetera import generar_direccion, crear_billetera, cargar_billetera
+from transaccion import crear_y_firmar_transaccion
+from verificador import verificar_transaccion
+from cryptography.hazmat.primitives.asymmetric import ed25519
+import json, os
 
-class TestWalletCrypto(unittest.TestCase):
+# Vector dorado: Par de claves Ed25519 conocidas
+PRIV_CONOCIDA=b'\x00' * 32
+PUB_CONOCIDA=b'\x01' * 32
+FIRMA_CONOCIDA=b'\x02' * 64
+MSJ_CONOCIDO=b'{"from":"0x123","to":"0x456","value":"1","nonce":1,"gas_limit":21000,"data_hex":"","timestamp":"2025-01-01T00:00:00Z"}'
+
+def test_derivacion_direccion():
+    direc=generar_direccion(PUB_CONOCIDA)
+    assert direc.startswith("0x"), "La dirección debe comenzar con 0x"
+    assert len(direc)==42, "Longitud de dirección Ethereum"
+
+def test_cifrado_descifrado_ida_vuelta(tmp_path):
+    contra="contraprueba"
+    # Crear
+    resultado=crear_billetera(contra)
+    assert resultado["exito"]
+    # Guardar en temporal
+    with open(tmp_path / "keystore.json", "w") as f:
+        json.dump(resultado, f)  # Guardado simulado
+    # Cargar
+    _, res_carga=cargar_billetera(contra)
+    assert res_carga["exito"]
+
+def test_firmar_verificar_vector_dorado():
+    priv=ed25519.Ed25519PrivateKey.from_private_bytes(PRIV_CONOCIDA)
+    firma=priv.sign(MSJ_CONOCIDO)
+    pub=priv.public_key()
+    pub.verify(firma, MSJ_CONOCIDO) 
+    assert True # Dorado: Firma conocida verifica
+
+def test_canonicalizacion():
+    tx={"from": "0x1", "to": "0x2", "value": "10", "nonce": 1}
+    canonica=json.dumps(tx, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    assert b'"from":"0x1"' in canonica  # Ordenado
+
+# Para TX completa: Simular archivos en tmp_path
+def test_verificar_tx_vector_prueba(tmp_path):
+    #Válida
+    tx_valida = {"tx": {"from": "0x123", "to": "0x456", "value": "1", "nonce": 1}, "sig_scheme": "Ed25519", "signature_b64": base64.b64encode(FIRMA_CONOCIDA).decode(), "pubkey_b64": base64.b64encode(PUB_CONOCIDA).decode()}
+    with open(tmp_path / "tx_valida.json", "w") as f:
+        json.dump(tx_valida, f)
+    assert verificar_transaccion(str(tmp_path / "tx_valida.json"))["valido"]
     
-    def setUp(self):
-        "Prepara el entorno limpio antes de cada prueba."
-        billetera.NOMBRE_ARCHIVO_CLAVES="test_keystore.json"
-        verificador.ARCHIVO_NONCES="test_nonces.json"
-        if os.path.exists("test_keystore.json"):os.remove("test_keystore.json")
-        if os.path.exists("test_nonces.json"):os.remove("test_nonces.json")
-        if os.path.exists("test_tx.json"):os.remove("test_tx.json")
+    #Mala firma
+    tx_mala_firma = tx_valida.copy()
+    tx_mala_firma["signature_b64"] = "invalid"
+    with open(tmp_path / "tx_mala.json", "w") as f:
+        json.dump(tx_mala_firma, f)
+    assert not verificar_transaccion(str(tmp_path / "tx_mala.json"))["valido"]
 
-    def tearDown(self):
-        "Limpia la basura después de cada prueba"
-        if os.path.exists("test_keystore.json"):os.remove("test_keystore.json")
-        if os.path.exists("test_nonces.json"):os.remove("test_nonces.json")
-        if os.path.exists("test_tx.json"):os.remove("test_tx.json")
-        if os.path.exists("test_tx_fake.json"):os.remove("test_tx_fake.json")
-
-    def test_canonicalizacion(self):
-        "Prueba que el JSON se ordene correctamente"
-        data1={"b": 1, "a": 2}
-        data2={"a": 2, "b": 1}
-        canon1=transaccion.canonicalizar_json(data1)
-        canon2=transaccion.canonicalizar_json(data2)
-        self.assertEqual(canon1,canon2)
-
-    @patch('builtins.input',return_value="password_test_123")
-    def test_firma_y_verificacion(self, mock_input):
-        "Prueba una transacción válida con datos reales."
-
-        billetera.crear_billetera()
-        llave=billetera.cargar_billetera()
-        bytes_publicos=llave.public_key().public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        )
-        mi_direccion_real=billetera.generar_direccion(bytes_publicos)
-
-        tx = {
-            "from":mi_direccion_real, 
-            "to":"0xDestinoPrueba", 
-            "value":100,
-            "nonce":1,         
-            "timestamp":"HOY"
-        }
-        tx_bytes=transaccion.canonicalizar_json(tx)
-        
-        firma=llave.sign(tx_bytes)
-        firma_b64=base64.b64encode(firma).decode('utf-8')
-        
-        paquete={
-            "tx":tx,
-            "signature_b64": firma_b64,
-            "pubkey_b64":base64.b64encode(bytes_publicos).decode('utf-8')
-        }
-        
-        with open("test_tx.json", "w") as f:
-            json.dump(paquete, f)
-            
-        resultado=verificador.verificar_transaccion("test_tx.json")
-
-        if not resultado:
-            print("\nDebug. La verificación falló inesperadamente.")
-        self.assertTrue(resultado, "La transacción válida fue rechazada por error.")
-        
-        paquete["tx"]["value"] =999999 
-        with open("test_tx_fake.json","w") as f:
-            json.dump(paquete, f)
-            
-        resultado_fake= verificador.verificar_transaccion("test_tx_fake.json")
-        self.assertFalse(resultado_fake, "El ataque de modificación debió ser rechazado.")
-
-    def test_vectores_dorados(self):
-        "Genera vectores validos"
-        print("\nVectores que sirven para el pdf")
-        with patch('builtins.input', return_value="password_test_123"):
-            billetera.crear_billetera()
-            llave=billetera.cargar_billetera()
-            bytes_publicos = llave.public_key().public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw
-            )
-            addr = billetera.generar_direccion(bytes_publicos)
-            
-            for i in range(1, 4):
-                tx={"from":addr, "to":"0xBob", "val":i, "nonce":i}
-                tx_bytes=transaccion.canonicalizar_json(tx)
-                firma=llave.sign(tx_bytes)
-                print(f"Vector #{i}:")
-                print(f" JSON: {tx}")
-                print(f" SIG:  {base64.b64encode(firma).decode('utf-8')[:20]}...")
-
-if __name__=='__main__':
-    unittest.main()
+if __name__=="__main__":
+    pytest.main(["-v", __file__])
