@@ -3,13 +3,13 @@ import base64
 import os
 import shutil
 import datetime
-from billetera import generar_direccion
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from billetera import generar_direccion 
 
 CARPETA_ENTRADA="inbox"
 CARPETA_VERIFICADOS="verified"
 ARCHIVO_NONCES="base_datos_nonces.json"
-LIBRETA_DIRECCIONES="address_book.json"
+LIBRETA_DIRECCIONES="address_book.json"  
 
 def cargar_rastreador_nonces():
     if not os.path.exists(ARCHIVO_NONCES):
@@ -35,30 +35,30 @@ def cargar_libreta_direcciones():
         return {}
 
 def guardar_libreta_direcciones(datos):
-    "Guarda libreta de direcciones JSON"
+    "Guarda libreta de direcciones JSON."
     with open(LIBRETA_DIRECCIONES,"w") as f:
-        json.dump(datos,f,indent=4)
-        
+        json.dump(datos, f, indent=4)
+
 def canonicalizar_json(datos):
-    "JSON Canonico: llaves ordenadas,UTF-8,sin espacios (documentado para reproducibilidad)"
-    cadena_json=json.dumps(datos,sort_keys=True,separators=(',', ':'))
+    "JSON Canónico: llaves ordenadas, UTF-8, sin espacios (documentado para reproducibilidad)"
+    cadena_json=json.dumps(datos, sort_keys=True, separators=(',', ':'))
     return cadena_json.encode('utf-8')
 
 def verificar_transaccion(ruta_archivo):
-    "Verificacion detallada: Retorna dict con 'valido' y 'razon' (cumple specs para razones detalladas), incluye recomputar canónico/resumen, verificar firma, coincidencia de dirección"
-    resultado={"valido":False, "razon": "", "direccion": ""}
+    "Verificación detallada: Retorna dict con 'valido' y 'razon' (cumple specs para razones detalladas), incluye recomputar canónico/resumen, verificar firma, coincidencia de dirección"
+    resultado={"valido": False, "razon": "", "direccion": ""}
     try:
         with open(ruta_archivo, "r") as f:
-            paquete = json.load(f)
+            paquete=json.load(f)
         datos_tx=paquete["tx"]
         firma_b64=paquete["signature_b64"]
         pubkey_b64=paquete["pubkey_b64"]
         remitente=datos_tx["from"]
         nonce_entrante=datos_tx["nonce"]
         nonces_db=cargar_rastreador_nonces()
-        ultimo_nonce=nonces_db.get(remitente, -1)
+        ultimo_nonce=nonces_db.get(remitente, -1) 
         
-       if nonce_entrante<=ultimo_nonce:
+        if nonce_entrante<=ultimo_nonce:
             resultado["razon"]=f"Ataque de repetición: nonce {nonce_entrante} <= ultimo {ultimo_nonce}"
             return resultado
         bytes_publicos=base64.b64decode(pubkey_b64)
