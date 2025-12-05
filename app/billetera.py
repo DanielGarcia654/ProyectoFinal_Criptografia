@@ -15,12 +15,10 @@ def generar_direccion(bytes_publicos):
     direccion_bytes=sha256_hash[-20:]
     return "0x" + direccion_bytes.hex()
 
-def crear_billetera():
-    print("*Configuración inicial de sistema de billetera fría")
-    contraseña=input("Define una contraseña segura para tu billetera: ")
-    if not contraseña:
-        print("Se debe generar una contraseña obligatoriamente")
-        return
+def crear_billetera(contraseña, request=None):
+    if not contraseña: 
+        return {"exito": False, "error": "Se debe generar una contraseña obligatoriamente"}
+    resultado = {"exito": False, "mensaje": "", "direccion": "", "pubkey_b64": "", "error": ""}
 
     print("*Generando par de llaves criptográficas (Ed25519)...")
 
