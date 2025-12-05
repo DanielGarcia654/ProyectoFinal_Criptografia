@@ -124,24 +124,19 @@ def cargar_billetera(contraseña,request=None):
             lanes=datos["kdf_params"]["p"]
         )
         llave_maestra=kdf.derive(contraseña.encode('utf-8'))
-
         aesgcm=AESGCM(llave_maestra)
-        
-        datos_para_decifrar=texto_cifrado + tag
-        bytes_privados=aesgcm.decrypt(nonce, datos_para_decifrar, None)
-        
+        bytes_privados=aesgcm.decrypt(nonce, texto_cifrado + tag, None)
+
         llave_privada=ed25519.Ed25519PrivateKey.from_private_bytes(bytes_privados)
-        
-        print("\nEXITO. Contraseña correcta, billetera desbloqueada.")
-        
         bytes_publicos=llave_privada.public_key().public_bytes(
             encoding=serialization.Encoding.Raw,
             format=serialization.PublicFormat.Raw
         )
         direccion=generar_direccion(bytes_publicos)
-        print(f"Dirección recuperada: {direccion}")
-        
-        return llave_privada
+
+        resultado["exito"]=True
+        resultado["direccion"]=direccion
+        resultado["mensaje"]=f"Billetera desbloqueada → {direccion}"
 
     except Exception:
         print("\nFALLO. No se pudo desbloquear la billetera (Contraseña incorrecta).")
