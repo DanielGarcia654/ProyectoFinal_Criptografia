@@ -31,18 +31,18 @@ class AppBilleteraCrypto:
                     font=ctk.CTkFont(size=9), text_color="gray").pack(pady=5)
 
         # Botones principales
-        ctk.CTkButton(self.barra_lateral, text="1. Crear billetera", command=self.opcion1, width=200).pack(pady=8, padx=20)
-        ctk.CTkButton(self.barra_lateral, text="2. Cargar billetera", command=self.opcion2, width=200).pack(pady=8, padx=20)
+        ctk.CTkButton(self.barra_lateral, text="1. Crear billetera", command=self.opcion1, width=200).pack(pady=15, padx=20)
+        ctk.CTkButton(self.barra_lateral, text="2. Cargar billetera", command=self.opcion2, width=200).pack(pady=15, padx=20)
         ctk.CTkButton(self.barra_lateral, text="3. Enviar TX (auto-copia)", command=self.enviar_tx_auto, 
                      width=200, fg_color="#1f6aa5", hover_color="#144870").pack(pady=15, padx=20)
-        ctk.CTkButton(self.barra_lateral, text="4. Procesar bandeja", command=self.opcion4, width=200).pack(pady=8, padx=20)
+        ctk.CTkButton(self.barra_lateral, text="4. Procesar bandeja", command=self.opcion4, width=200).pack(pady=15, padx=20)
         
         # BOTÓN VER LOGS
         ctk.CTkButton(self.barra_lateral, text="Ver Registros", command=self.ver_registros, 
-                     width=200, fg_color="#d10a0a", hover_color="#0fe32f").pack(pady=10, padx=20)
+                     width=200, fg_color="#2191ba", hover_color="#15566d").pack(pady=15, padx=20)
 
         ctk.CTkButton(self.barra_lateral, text="Salir", command=self.app.destroy, 
-                     width=200, fg_color="darkred").pack(pady=30, padx=20)
+                     width=200, fg_color="red", hover_color="#910A0A").pack(pady=30, padx=20)
 
         # Principal con pestañas
         area_principal=ctk.CTkFrame(self.app)
@@ -57,41 +57,52 @@ class AppBilleteraCrypto:
             marco = ctk.CTkScrollableFrame(self.vista_pestanas.tab(pestana))
             marco.pack(fill="both", expand=True, padx=10, pady=10)
             self.marcos[pestana.lower()] = marco
-        self.refrescar_carpetas()
-        self.agregar_registro("Aplicación iniciada")
+        #self.refrescar_carpetas()
+        #self.agregar_registro("Aplicación iniciada")
+
+    def ver_registros(self):
+        "Abre el archivo de registros con el editor predeterminado"
+        if not os.path.exists(ARCHIVO_REGISTROS):
+            messagebox.showinfo("Registros","Aún no hay registros generados.")
+            return
+        try:
+            os.startfile(os.path.abspath(ARCHIVO_REGISTROS))  
+        except:
+            subprocess.Popen(["notepad", os.path.abspath(ARCHIVO_REGISTROS)])
 
     ## def actualizar_estado
     
     def opcion1(self): ###
-        contraseña = simpledialog.askstring("Contraseña", "Define una contraseña segura para tu billetera:", show='*')
-        if not contraseña:
-            messagebox.showwarning("Advertencia", "Se debe generar una contraseña obligatoriamente.")
-            return
-        try:
-            resultado = billetera.crear_billetera(contraseña=contraseña)
-            if resultado["exito"]:
-                messagebox.showinfo("Éxito", resultado["mensaje"])
-            else:
-                messagebox.showerror("Error", resultado["error"])
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al crear billetera: {str(e)}")
+        dialogo=ctk.CTkInputDialog(text="Define una contraseña segura:", title="Crear Billetera")
+        contra=dialogo.get_input()
+        if not contra: return
+        resultado=billetera.crear_billetera(contra)
+        if resultado["exito"]:
+            self.agregar_registro(f"Billetera creada: {resultado['direccion']}")
+            self.actualizar_estado(resultado["direccion"])
+            messagebox.showinfo("Exito", "Billetera creada correctamente")
+        else:
+            messagebox.showerror("Error", resultado["error"])
     
     def opcion2(self): ###
-        contraseña = simpledialog.askstring("Contraseña", "Ingresa tu contraseña para desbloquear:", show='*')
-        if not contraseña:
-            return  # O avisa si quieres
-        try:
-            llave, resultado = billetera.cargar_billetera(contraseña=contraseña)
-            if resultado["exito"]:
-                messagebox.showinfo("Éxito", resultado["mensaje"])
-            else:
-                messagebox.showerror("Error", resultado["error"])
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar billetera: {str(e)}")
+        dialogo=ctk.CTkInputDialog(text="Ingresa tu contraseña:", title="Cargar Billetera")
+        contra=dialogo.get_input()
+        if not contra: return
+        llave, resultado=billetera.cargar_billetera(contra)
+        if resultado["exito"]:
+            self.agregar_registro(f"Billetera cargada: {resultado['direccion']}")
+            self.actualizar_estado(resultado["direccion"])
+            messagebox.showinfo("Éxito", "Billetera cargada")
+        else:
+            messagebox.showerror("Error", resultado["error"])
     
 
-
     #### def enviar_tx_auto
+    def enviar_tx_auto(self):
+        if not self.direccion_actual:
+            messagebox.showerror("Error", "No hay billetera cargada")
+            return
+
     
     def opcion4(self):
         resultado = verificador.procesar_inbox()
@@ -102,7 +113,7 @@ class AppBilleteraCrypto:
             messagebox.showerror("Error", resultado["error"])
         self.refrescar_carpetas()
     
-    def run(self):
+    def ejecutar(self):
         self.app.mainloop()
 
 if __name__ == "__main__":
